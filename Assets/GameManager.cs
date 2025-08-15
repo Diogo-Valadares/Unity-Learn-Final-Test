@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -8,6 +9,8 @@ public class GameManager : MonoBehaviour
 
     public static int points { get; private set; } = 0;
     public static int spawnedCount { get; set; } = 0;
+
+    public GameObject pauseMenu;
 
     public TextMeshProUGUI pointsText;
 
@@ -34,16 +37,32 @@ public class GameManager : MonoBehaviour
 
     public void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            TogglePause();
+        }
         if (Input.GetKeyDown(KeyCode.R))
         {
             Restart();
         }
     }
 
+    public void TogglePause()
+    {
+        Time.timeScale = pauseMenu.activeSelf ? 1 : 0;
+        pauseMenu.SetActive(!pauseMenu.activeSelf);
+    }
+
+    public void MainTitle()
+    {
+        SceneManager.LoadScene(0);
+    }
 
     public void Restart()
     {
         CancelInvoke();
+        Time.timeScale = 1;
+        pauseMenu.SetActive(false);
         spawnTime = inicialSpawnTime;
         Invoke(nameof(SpawnRandomObject), spawnTime);
         points = 0;
@@ -53,8 +72,17 @@ public class GameManager : MonoBehaviour
 
     public void GameOver()
     {
-        current.pointsText.text = "Gameover! Score: " + points + "\n Press R to Restart";
-        for(int i = spawnedObjects.Count - 1; i >= 0; i--)
+        if(points > PlayerPrefs.GetInt("high_score", 0))
+        {
+            PlayerPrefs.SetInt("high_score", points);
+            current.pointsText.text = "Gameover! New Record! Score: " + points + "\n Press R to Restart";
+        }
+        else
+        {
+            current.pointsText.text = "Gameover! Score: " + points + "\n Press R to Restart";
+        }
+
+        for (int i = spawnedObjects.Count - 1; i >= 0; i--)
         {
             Destroy(spawnedObjects[i]);
         }
